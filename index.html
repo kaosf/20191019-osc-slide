@@ -1,0 +1,639 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="ka" />
+  <meta name="date" content="2019-10-19" />
+  <title>暗号と秘密計算のおはなし，それと電子投票への応用</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="https://www.w3.org/Talks/Tools/Slidy2/styles/slidy.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+  <script src="https://www.w3.org/Talks/Tools/Slidy2/scripts/slidy.js"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div class="slide titlepage">
+  <h1 class="title">暗号と秘密計算のおはなし，それと電子投票への応用</h1>
+  <p class="author">
+ka
+  </p>
+  <p class="date">2019-10-19</p>
+</div>
+<div id="author" class="slide section level1">
+<h1>Author</h1>
+<p>ka</p>
+<p><a href="https://gravatar.com/ka000"><img src="https://gravatar.com/avatar/884be098693425b409d25aaec5091de8?s=150" alt="Gravatar" /></a></p>
+<p>Website: <a href="https://www.kaosfield.net">kaosfield</a></p>
+<p>Twitter: <a href="https://twitter.com/ka_">ka</a></p>
+<p>GitHub: <a href="https://github.com/kaosf">kaosf</a></p>
+</div>
+<div id="license" class="slide section level1">
+<h1>License</h1>
+<p><a href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img src="https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png" alt="CC BY-NC-SA 4.0" /></a></p>
+<p>Copyright (C) 2019 ka</p>
+</div>
+<div id="このページとリポジトリ" class="slide section level1">
+<h1>このページとリポジトリ</h1>
+<p><a href="https://kaosf.github.io/20191019-osc-slide">https://kaosf.github.io/20191019-osc-slide</a></p>
+<p>Repository: <a href="https://github.com/kaosf/20191019-osc-slide">kaosf/20191019-osc-slide - GitHub</a></p>
+<p>このスライドはオープンソースとして公開されています</p>
+<p>誤字脱字，その他ミスの修正などはPull Requestとして随時受け付けています</p>
+<p>また手元で自分のペースで読み返したりなどはご自由にどうぞ</p>
+<p>以下のQRコードでスライドが見えます</p>
+<p><img src="this-slide-qr.png" /></p>
+</div>
+<div id="構成" class="slide section level1">
+<h1>構成</h1>
+<ul>
+<li>暗号とは何か簡単におさらい</li>
+<li>余り付き割り算のおはなし</li>
+<li>同型とはどういうことか</li>
+<li>加法準同型暗号の紹介</li>
+<li>秘密計算の現状の紹介</li>
+<li>電子投票での応用方法の紹介</li>
+</ul>
+</div>
+<div id="暗号の用語" class="slide section level1">
+<h1>暗号の用語</h1>
+<ul>
+<li>平文(ひらぶん) cleartext
+<ul>
+<li>そのまま読み取れる情報</li>
+</ul></li>
+<li>暗号文 ciphertext
+<ul>
+<li>平文を変換した情報 そのまま読み取るとノイズと変わらない(理想)</li>
+</ul></li>
+<li>暗号化 encryption</li>
+<li>復号 decryption</li>
+<li>暗号化する encrypt</li>
+<li>復号する decrypt</li>
+<li>共通鍵 common key
+<ul>
+<li>暗号化と復号の際に変換</li>
+</ul></li>
+<li>公開鍵 public key</li>
+<li>秘密鍵 private key, secret key</li>
+</ul>
+</div>
+<div id="暗号の実例" class="slide section level1">
+<h1>暗号の実例</h1>
+<h2 id="古いもの">古いもの</h2>
+<ul>
+<li>シーザー暗号</li>
+<li>踊る人形</li>
+<li>エニグマ</li>
+</ul>
+<h2 id="新しいもの">新しいもの</h2>
+<ul>
+<li>AES (Advanced Encryption Standard)</li>
+<li>RSA</li>
+<li>ECC (Eliptic Curve Cryptosystem)</li>
+</ul>
+</div>
+<div id="シーザー暗号の暗号化" class="slide section level1">
+<h1>シーザー暗号の暗号化</h1>
+<p>アルファベットを決まった数だけずらす</p>
+<p>+3ずらすなら…</p>
+<p>平文: HELLO -(暗号化)→ 暗号文: KHOOR</p>
+<h2 id="理由">理由</h2>
+<ul>
+<li>H, I, J, K</li>
+<li>E, F, G, H</li>
+<li>L, M, N, O</li>
+<li>O, P, Q, R</li>
+</ul>
+</div>
+<div id="復号のやり方" class="slide section level1">
+<h1>復号のやり方</h1>
+<p>暗号化が+3ずらすのであれば復号は-3ずらせばOK</p>
+<p>暗号文: JRRGEBH -(復号)→ 平文: GOODBYE</p>
+<h2 id="理由-1">理由</h2>
+<ul>
+<li>G, H, I, J</li>
+<li>O, P, Q, R</li>
+<li>D, E, F, G</li>
+<li>B, C, D, E</li>
+<li>Y, Z, A, B</li>
+<li>E, F, G, H</li>
+</ul>
+</div>
+<div id="鍵" class="slide section level1">
+<h1>鍵</h1>
+<p>この場合 +3 というのが<strong>鍵</strong>になる</p>
+<p>暗号化も復号も同じ鍵を使うので共通鍵暗号という</p>
+</div>
+<div id="共通鍵暗号の問題点" class="slide section level1">
+<h1>共通鍵暗号の問題点</h1>
+<p>最初に鍵を誰にも知られず共有しておかなければならない</p>
+<p>盗聴者に鍵を知られると通信内容がバレてしまう</p>
+</div>
+<div id="公開鍵と秘密鍵" class="slide section level1">
+<h1>公開鍵と秘密鍵</h1>
+<p>公開鍵で暗号化をするとその鍵では復号出来ないが秘密鍵を使うと復号出来るという性質を持つ暗号</p>
+<p>イメージとしては誰でも鍵をかけられる錠前とそれを開けることが出来る鍵</p>
+<p>錠前が公開鍵でそれを開ける鍵が秘密鍵のようなイメージ</p>
+</div>
+<div id="暗号文の性質" class="slide section level1">
+<h1>暗号文の性質</h1>
+<p>シーザー暗号のような暗号は実は人力でも簡単に解読出来てしまう</p>
+<p>暗号文に平文の性質(例えばアルファベットならeがよく出現するなど)が残ってしまう</p>
+<p>良い暗号文は平文の性質が一切残らないものである</p>
+<p>暗号文をただそれだけ眺めていてもそれはノイズと見分けがつかない</p>
+<p>現在使われている暗号はその辺りは既に完璧である</p>
+</div>
+<div id="オープンソースとの関係" class="slide section level1">
+<h1>オープンソースとの関係</h1>
+<p>実は暗号技術はオープンソースと切っても切れない関係にある</p>
+<p>暗号化の方法を秘匿にする方法がかつてはとられていましたが現代の暗号というのは<br />
+<strong>暗号化する方法は誰もが知っているが復号は現実的に不可能である</strong><br />
+ということが世界中の人によって確認されていることが重要</p>
+<p>それが本当に強い暗号である</p>
+<p>敢えて言うなら暗号化の方法を隠さなければならない時点で何かが弱い疑いがある</p>
+</div>
+<div id="余り付き割り算のおはなし" class="slide section level1">
+<h1>余り付き割り算のおはなし</h1>
+<p>ここから易しめで行きます</p>
+</div>
+<div id="余り付き割り算のおはなし-1" class="slide section level1">
+<h1>余り付き割り算のおはなし</h1>
+<p>小数や分数を考えない余り付きの割り算を覚えていますか？</p>
+<p><span class="math inline">\(7 \div 3 = 2 \cdots 1\)</span></p>
+<p><span class="math inline">\(13 \div 5 = 2 \cdots 3\)</span></p>
+<p><span class="math inline">\(30 \div 8 = 3 \cdots 6\)</span></p>
+<p>7を3で割ると2余り1…のようなもの</p>
+<p>小学校でやって中学校で少し忘れて高校以降また多項式になって考えたりするあれです</p>
+</div>
+<div id="モジュロ演算" class="slide section level1">
+<h1>モジュロ演算</h1>
+<p>この「割る数」と「余り」にだけ着目した数学があります</p>
+<p>モジュロ演算または剰余演算と呼びます</p>
+<p>例えば…</p>
+<p><span class="math inline">\(7 \div 3 = 2 \cdots 1\)</span></p>
+<p><span class="math inline">\(10 \div 3 = 3 \cdots 1\)</span></p>
+<p><span class="math inline">\(13 \div 3 = 4 \cdots 1\)</span></p>
+<p>このとき，7と10と13は3で割った余りが全て1です</p>
+</div>
+<div id="モジュロ演算-1" class="slide section level1">
+<h1>モジュロ演算</h1>
+<p>ここで「7も10も13も3で割った余りが等しいから等しいとみなそう」と考えます</p>
+<p>以下のように表記します</p>
+<p><span class="math inline">\(7 \equiv 1 \pmod{3}\)</span></p>
+<p><span class="math inline">\(10 \equiv 1 \pmod{3}\)</span></p>
+<p><span class="math inline">\(13 \equiv 1 \pmod{3}\)</span></p>
+<p><span class="math inline">\(7 \equiv 10 \equiv 13 \equiv 1 \pmod{3}\)</span></p>
+<p>紛らわしいかも知れませんが誤解の心配がなければ通常の <span class="math inline">\(=\)</span> で書くこともあります</p>
+<p><span class="math inline">\(7 = 1 \pmod{3}\)</span></p>
+<p>このスライドでは <span class="math inline">\(=\)</span> で書きます</p>
+</div>
+<div id="モジュロ演算-2" class="slide section level1">
+<h1>モジュロ演算</h1>
+<p><span class="math inline">\(7 = 1 \pmod{3}\)</span></p>
+<p>これを日本語で「<strong>3を法とすると</strong>7と1は等しい」と言います</p>
+<p>単純に「7と1は等しい」と言う言葉に条件を付け加えるニュアンスです</p>
+</div>
+<div id="四則演算" class="slide section level1">
+<h1>四則演算？</h1>
+<p>モジュロ演算では四則演算は可能でしょうか？</p>
+<p>答えは</p>
+<p>足し算と引き算と掛け算は可能，割り算も場合によっては可能</p>
+<p><span class="math inline">\(7 + 10 = 1 + 1 = 2 \pmod{3}\)</span></p>
+<p><span class="math inline">\(7 + 10 = 17 = 3 * 5 + 2 = 2 \pmod{3}\)</span></p>
+<p><span class="math inline">\(10 - 7 = 1 - 1 = 0 \pmod{3}\)</span></p>
+<p><span class="math inline">\(10 - 7 = 3 = 0 \pmod{3}\)</span></p>
+<p><span class="math inline">\(7 * 10 = 1 * 1 = 1 \pmod{3}\)</span></p>
+<p><span class="math inline">\(7 * 10 = 70 = 3 * 23 + 1 = 1 \pmod{3}\)</span></p>
+</div>
+<div id="考える数が少なくなる" class="slide section level1">
+<h1>考える数が少なくなる</h1>
+<p>3で割った余りしか考えない世界なので実質出てくる数値は 0, 1, 2 だけです</p>
+<p>…と言ってもそれで計算が何もかも簡単になるわけじゃないです</p>
+<p>と言うよりそれで難しくなってしまう<strong>ある計算</strong>を利用して暗号を作ります</p>
+<p>それはまた後ほど</p>
+</div>
+<div id="結局割り算って" class="slide section level1">
+<h1>結局割り算って？</h1>
+<p><span class="math inline">\(\pmod{3}\)</span> の 3 と <strong>互いに素</strong> な数であれば割り算が可能です</p>
+<p>例1</p>
+<p><span class="math inline">\(10 = 40 = 1 \pmod{3}\)</span></p>
+<p><span class="math inline">\(10 \div 5 = 2 \pmod{3}\)</span></p>
+<p><span class="math inline">\(40 \div 5 = 8 = 2 \pmod{3}\)</span></p>
+<p>例2</p>
+<p><span class="math inline">\(24 = 34 = 4 \pmod{5}\)</span></p>
+<p><span class="math inline">\(24 \div 2 = 12 = 2 \pmod{5}\)</span></p>
+<p><span class="math inline">\(34 \div 2 = 17 = 2 \pmod{5}\)</span></p>
+<p>ですが今回ここは詳しくは省略します</p>
+<p>ですがですが <strong>互いに素</strong> という概念は重要なので後で説明します</p>
+</div>
+<div id="割り算がおかしくなる場合" class="slide section level1">
+<h1>割り算がおかしくなる場合</h1>
+<p><span class="math inline">\(14 = 8 \pmod{6}\)</span></p>
+<p><span class="math inline">\(14 \div 2 = 7 = 1 \pmod{6}\)</span></p>
+<p><span class="math inline">\(8 \div 2 = 4 \pmod{6}\)</span></p>
+<p>1と4が6を法とする世界で同じ？？？そんなことはない</p>
+<p><strong>割り算はいつでも出来るわけではない</strong> ということです</p>
+</div>
+<div id="逆数" class="slide section level1">
+<h1>逆数</h1>
+<p>モジュロ演算ではないよく知っている計算の世界では割り算とは即ち逆数の掛け算のことでした</p>
+<p>逆数とは何だったでしょう？</p>
+<p>簡単に言うと <span class="math inline">\(x\)</span> の逆数は <span class="math inline">\(\frac{1}{x}\)</span> でした</p>
+<p>しかし本質的には <strong>掛け算すると1になる数</strong> のことを逆数と言います</p>
+<p>モジュロ演算の世界でもこれを考えることが出来るでしょうか？</p>
+</div>
+<div id="モジュラ逆数" class="slide section level1">
+<h1>モジュラ逆数</h1>
+<p>今は分数や小数を考えていません</p>
+<p>なので <span class="math inline">\(2\)</span> の逆数は？と聞かれても <span class="math inline">\(\frac{1}{2}\)</span> ではなく…</p>
+</div>
+<div id="モジュラ逆数-1" class="slide section level1">
+<h1>モジュラ逆数</h1>
+<p><span class="math inline">\(2\)</span> に掛け算するとモジュロ演算の世界で <span class="math inline">\(1\)</span> になる数は何か？と考えます</p>
+<p><span class="math inline">\(2 * 0 = 0 \pmod{3}\)</span> ダメ</p>
+<p><span class="math inline">\(2 * 1 = 2 \pmod{3}\)</span> ダメ</p>
+<p><span class="math inline">\(2 * 2 = 4 = 1 \pmod{3}\)</span> OK</p>
+<p>なので 3 を法とすると 2 の逆数は 2 です…不思議ですがそうなんです</p>
+</div>
+<div id="指数" class="slide section level1">
+<h1>指数</h1>
+<p>指数を覚えていますか？</p>
+<p><span class="math inline">\(2^{3} = 2 * 2 * 2 = 8\)</span></p>
+<p><span class="math inline">\(4^{2} = 4 * 4 = 16\)</span></p>
+<p>右肩についている数の分だけ掛け算をする計算です</p>
+</div>
+<div id="指数法則" class="slide section level1">
+<h1>指数法則</h1>
+<p>指数計算には指数法則という性質があります</p>
+<p><span class="math inline">\(2^{2} * 2^{3} = 2 * 2 * 2 * 2 * 2 = 2^{5} = 2^{2 + 3}\)</span></p>
+<p><span class="math inline">\(3^{3} * 3^{1} = 3 * 3 * 3 * 3 = 3^{4} = 3^{3 + 1}\)</span></p>
+<p>掛け算の計算を足し算に置き換えて考えることが出来ます</p>
+</div>
+<div id="モジュロ演算の世界では" class="slide section level1">
+<h1>モジュロ演算の世界では？</h1>
+<p>詳しくは説明しません</p>
+<p><span class="math inline">\(2^{3} * 2^{1} = 2^{4} \pmod{3}\)</span></p>
+<p>掛け算が出来るんだから指数の計算も指数法則も同じですよね？</p>
+<p><span class="math inline">\(2^{3} * 2^{1} = 8 * 2 = 2 * 2 = 4 = 1 \pmod{3}\)</span></p>
+<p><span class="math inline">\(2^{4} = 16 = 1 \pmod{3}\)</span></p>
+</div>
+<div id="余談" class="slide section level1">
+<h1>余談</h1>
+<p>高校生以上の人は指数計算には 0 乗とか負数乗とか果ては実数乗まで存在していることを知ってるかもしれません</p>
+<p>(複素数乗も知ってたら偉い)</p>
+<p>だから成り立たない場合もあるのでは？と思ったかもしれませんが今モジュロ演算の世界では足し算の場合しか考えません</p>
+<p>なので大丈夫</p>
+<p>ちなみに一応ですが 0 乗はOKです</p>
+<p><span class="math inline">\(2^{2} * 2^{0} = 2^{2} \pmod{3}\)</span></p>
+</div>
+<div id="まとめ" class="slide section level1">
+<h1>まとめ</h1>
+<h2 id="モジュロ演算とは">モジュロ演算とは</h2>
+<p><span class="math inline">\(a = b \pmod{p}\)</span> とは <span class="math inline">\(a\)</span> と <span class="math inline">\(b\)</span> は <span class="math inline">\(p\)</span> を法として等しいという意味</p>
+<p>言い換えると <span class="math inline">\(a\)</span> と <span class="math inline">\(b\)</span> は <span class="math inline">\(p\)</span> で割り算した余りが等しい</p>
+<h2 id="どういう計算が出来るか">どういう計算が出来るか</h2>
+<p><span class="math inline">\(a = b \pmod{p} \Longrightarrow a + c = b + c \pmod{p}\)</span></p>
+<p><span class="math inline">\(a = b \pmod{p} \Longrightarrow a * c = b * c \pmod{p}\)</span></p>
+<p><span class="math inline">\(a = b \pmod{p} \Longrightarrow a^{c} = b^{c} \pmod{p}\)</span></p>
+<h2 id="逆数を考えることも出来る">逆数を考えることも出来る</h2>
+<p>モジュラ逆数というものが考えられ <span class="math inline">\(p\)</span> を法とする世界で <span class="math inline">\(a\)</span> のモジュラ逆数が <span class="math inline">\(b\)</span> であるなら <span class="math inline">\(a * b = 1 \pmod{p}\)</span> となる</p>
+</div>
+<div id="同型とは何か" class="slide section level1">
+<h1>同型とは何か？</h1>
+</div>
+<div id="同型とは何か-1" class="slide section level1">
+<h1>同型とは何か？</h1>
+<p>急に難しそうな数学用語が出てきました…</p>
+<p>ですが今回に限って言えば例としては単純なもので…</p>
+</div>
+<div id="指数法則-1" class="slide section level1">
+<h1>指数法則</h1>
+<p><span class="math inline">\(2^{3}\)</span> と <span class="math inline">\(2^{2}\)</span> の <strong>掛け算</strong> を先程考えました</p>
+<p>ですがこれの計算は実質</p>
+<p><span class="math inline">\(2^{3 + 2}\)</span></p>
+<p>つまり<strong>足し算</strong>を考えることだと言いました</p>
+</div>
+<div id="足し算の世界と掛け算の世界を行き来出来る" class="slide section level1">
+<h1>足し算の世界と掛け算の世界を行き来出来る</h1>
+<p><span class="math inline">\(3 + 2\)</span> という計算の結果と <span class="math inline">\(8 * 4\)</span> という計算の結果はお互いに対応しています</p>
+<p><span class="math display">\[3 + 2 = 5 \longleftrightarrow 2^{3} * 2^{2} = 2^{5}\]</span></p>
+<p>変数に置き換えて話を広げると</p>
+<p><span class="math display">\[x + y = z \longleftrightarrow 2^{x} * 2^{y} = 2^{z}\]</span></p>
+<p>これは指数法則そのものですが…</p>
+<p>左側の足し算の世界と右側の掛け算の世界は一対一に対応しているのです</p>
+<p>片方を計算するともう片方の計算もしたことになります</p>
+<p>語弊はありますがこういう性質のことを同型といいます</p>
+</div>
+<div id="準同型と同型" class="slide section level1">
+<h1>準同型と同型</h1>
+<p>誤解を恐れず簡単に言うと同型よりもゆるいものが準同型です</p>
+<p>この辺りをガチで考えるととてもしんどいので今日は放っておきましょう</p>
+<p>別に問題ありませんしそもそもここから先話がどんどんフワっとしていきます</p>
+<p>なのですみませんがここから先は変数がバンバン出てきます</p>
+<p>ですが実際にやっている計算は全て今まで説明したものだけです</p>
+<p>ではサクサク進んでいきましょう</p>
+</div>
+<div id="加法準同型暗号の紹介" class="slide section level1">
+<h1>加法準同型暗号の紹介</h1>
+<p>暗号化というのは平文となる数値を別の数値(暗号文)に置き換えること</p>
+<p>平文 <span class="math inline">\(m\)</span> を暗号化する操作を <span class="math inline">\(Enc(m)\)</span> とする</p>
+<p>暗号化ということは平文がノイズのように変わってしまう</p>
+<p>そのノイズのようなもの同士でも計算を行うと<br />
+平文で計算したものを暗号化したのと同じ結果になる性質をもつ暗号が存在する</p>
+<p>平文を足したものを <span class="math inline">\(m_1 + m_2\)</span> を暗号化 <span class="math inline">\(Enc(m_1 + m_2)\)</span></p>
+<p>個別に暗号化したものを掛け算 <span class="math inline">\(Enc(m_1) * Enc(m_2)\)</span></p>
+<p><span class="math display">\[Enc(m_1) * Enc(m_2) = Enc(m_1 + m_2)\]</span></p>
+<p>これが満たされて欲しい</p>
+</div>
+<div id="加法準同型暗号" class="slide section level1">
+<h1>加法準同型暗号</h1>
+<p>Pailler暗号という暗号が存在する</p>
+<p>Paillierの読み方は「ペイエ」</p>
+<p>参考: <a href="https://ja.wikipedia.org/wiki/Paillier%E6%9A%97%E5%8F%B7">Paillier暗号</a></p>
+<p>Paillier暗号では</p>
+<p><span class="math display">\[Enc(m_1) * Enc(m_2) = Enc(m_1 + m_2)\]</span></p>
+<p>となる</p>
+<p>暗号化したものを掛け算すると平文を足し算して暗号化したものと等しい</p>
+</div>
+<div id="秘密計算" class="slide section level1">
+<h1>秘密計算</h1>
+<p>ちなみにこのように暗号化したまま行う計算のことを秘密計算という</p>
+</div>
+<div id="加法準同型暗号の応用" class="slide section level1">
+<h1>加法準同型暗号の応用</h1>
+<p>匿名性を完全に維持して電子投票が可能になる</p>
+</div>
+<div id="注意" class="slide section level1">
+<h1>注意</h1>
+<p>「電子投票」と「インターネット投票」は別の話なので混同注意</p>
+<p>電子投票というのは紙と鉛筆と投票箱でやる投票を電子化しようというだけのもの</p>
+<p>インターネット投票は更にその先でそれをインターネットを使って何処からでも出来るようにしようというもの</p>
+</div>
+<div id="インターネット投票の問題点" class="slide section level1">
+<h1>インターネット投票の問題点</h1>
+<p>例えば投票の強制という問題がある</p>
+<p>投票が解禁される瞬間にどこかに監禁や軟禁をされ<br />
+ある特定の候補者へ投票をするところを確認されるまで解放されない<br />
+というような状況</p>
+</div>
+<div id="秘密計算の現状の紹介" class="slide section level1">
+<h1>秘密計算の現状の紹介</h1>
+<p>掛け算が出来るものは乗法準同型暗号</p>
+<p>足し算と掛け算が両方出来るものは2009年に実現された</p>
+<p>参考: <a href="https://www.slideshare.net/herumi/ss-59758244">暗号文のままで計算しよう - 準同型暗号入門 -</a></p>
+</div>
+<div id="電子投票での応用方法の紹介" class="slide section level1">
+<h1>電子投票での応用方法の紹介</h1>
+</div>
+<div id="匿名性を考えない電子投票について考える" class="slide section level1">
+<h1>匿名性を考えない電子投票について考える</h1>
+<p>例えば <em>きのこの山</em>, <em>たけのこの里</em>, <em>アルフォート</em> のどれを買うかを9人で投票して決めるとする</p>
+<p>ここで</p>
+<ul>
+<li>きのこの山への投票は1を足す</li>
+<li>たけのこの里への投票は10を足す</li>
+<li>アルフォートへの投票は100を足す</li>
+<li>棄権は0を足す</li>
+</ul>
+<p>という操作を考える</p>
+</div>
+<div id="section" class="slide section level1">
+<h1></h1>
+<p>もしも投票結果が <span class="math inline">\(214\)</span> になっていたなら…</p>
+<p><span class="math inline">\(214 = 2 * 100 + 1 * 10 + 4 * 1\)</span></p>
+<p>であるはずなので</p>
+<ul>
+<li>きのこの山(1): 4</li>
+<li>たけのこの里(10): 1</li>
+<li>アルフォート(100): 2</li>
+<li>棄権: 2 (9から4+1+2を引く)</li>
+</ul>
+<p>であったはずである</p>
+</div>
+<div id="section-1" class="slide section level1">
+<h1></h1>
+<p>もし99人で投票する場合は</p>
+<ul>
+<li>きのこの山への投票は1を足す</li>
+<li>たけのこの里への投票は100を足す</li>
+<li>アルフォートへの投票は10000を足す</li>
+<li>棄権は0を足す</li>
+</ul>
+<p>とすれば良い</p>
+<p>集計結果が</p>
+<ul>
+<li>9900 なら 99 人がたけのこの里</li>
+<li>990000 なら 99 人がアルフォート</li>
+<li>198 なら 1 人がたけのこの里で 98 人がきのこの山</li>
+</ul>
+</div>
+<div id="プライバシーの問題" class="slide section level1">
+<h1>プライバシーの問題</h1>
+<p>自分が何に投票したかは 0, 1, 10 or 100 で表現されるがこれを暗号化したい</p>
+<p>そして暗号化されたまま合算されて復号されるとうれしい</p>
+<p>ここで加法準同型暗号の出番である</p>
+</div>
+<div id="実装" class="slide section level1">
+<h1>実装</h1>
+<h2 id="暗号化">暗号化</h2>
+<p>平文と暗号文を <span class="math inline">\(m\)</span>, <span class="math inline">\(C\)</span> とする</p>
+<p>2つの異なる素数 <span class="math inline">\(p, q\)</span> の積が <span class="math inline">\(n\)</span> でありそれを公開鍵をする</p>
+<p><span class="math display">\[g = (1 + \alpha n) * \beta^n\]</span> <span class="math display">\[C = g^m \pmod{n^2}\]</span></p>
+<p><span class="math inline">\(\alpha\)</span>, <span class="math inline">\(\beta\)</span> は準同型の性質を崩さないように調整できる定数</p>
+<p><span class="math inline">\(g\)</span> は <span class="math inline">\(n\)</span> と <span class="math inline">\(\alpha\)</span>, <span class="math inline">\(\beta\)</span> から計算出来る公開鍵や公開情報とだけ認識してくれればOK</p>
+<p>(もうちょっと言っておくと <span class="math inline">\(g\)</span> は巡回群の生成元 <em>generator</em> です)</p>
+</div>
+<div id="section-2" class="slide section level1">
+<h1></h1>
+<p>ただしこれでは同じ平文(投票先)からは常に同じ暗号文が生成されてしまう</p>
+<p>そこで</p>
+<p><span class="math display">\[C = g^m * r^n \pmod{n^2}\]</span></p>
+<p>とする</p>
+<p>ここで <span class="math inline">\(r\)</span> は <span class="math inline">\(n\)</span> と互いに素となる整数値から選ばれる乱数である</p>
+<p>乱数を使って暗号化しても一意に復号が出来る(カーマイケルの定理より)</p>
+</div>
+<div id="ここでやります互いに素" class="slide section level1">
+<h1>ここでやります「互いに素」</h1>
+<p>2つの数が互いに素とは何か？</p>
+<p>互いに素というのは <strong>最大公約数が1になる</strong> という意味です</p>
+</div>
+<div id="最大公約数覚えてますか" class="slide section level1">
+<h1>最大公約数覚えてますか？</h1>
+<p>公約数というのは2つの数に共通する約数のことです</p>
+<p>約数というのは割り切ることの出来る数のことです</p>
+<p>例えば…</p>
+<p>10 の約数は 1, 2, 5, 10</p>
+<p>15 の約数は 1, 3, 5, 15</p>
+<p>共通する約数は 1 と 5 です</p>
+<p>なので最大公約数は 5 になり 10 と 15 は互いに素ではありません</p>
+</div>
+<div id="section-3" class="slide section level1">
+<h1></h1>
+<p>15 と 28 の場合</p>
+<p>15 の約数は 1, 3, 5, 15</p>
+<p>28 の約数は 1, 2, 4, 7, 14, 28</p>
+<p>共通する約数，公約数は… 1 しかありません</p>
+<p>最大の公約数が 1 です</p>
+<p>なので 15 と 28 は互いに素です</p>
+</div>
+<div id="実装-1" class="slide section level1">
+<h1>実装</h1>
+<h2 id="復号">復号</h2>
+<p>復号するための秘密鍵 <span class="math inline">\(\lambda\)</span> は以下の通り</p>
+<p><span class="math display">\[\lambda = \operatorname{lcm}(p-1, q-1)\]</span></p>
+<p><span class="math inline">\(\operatorname{lcm}(x, y)\)</span> というのは <span class="math inline">\(x\)</span> と <span class="math inline">\(y\)</span> の最小公倍数という意味です</p>
+<p>最大公約数のある意味正反対のモノです</p>
+</div>
+<div id="復号のつづき" class="slide section level1">
+<h1>復号のつづき</h1>
+<p>以下のように復号する</p>
+<p><span class="math display">\[C^\lambda = 1 + \alpha \lambda mn \pmod{n^2}\]</span></p>
+<p><span class="math display">\[g^\lambda = 1 + \alpha \lambda n \pmod{n^2}\]</span></p>
+<p>(↑これは二項定理を展開してみると証明出来ます)</p>
+<p><span class="math display">\[L(x) = \frac{x - 1}{n}\]</span></p>
+<p><span class="math display">\[\frac{L(C^\lambda)}{L(g^\lambda)} = \frac{\alpha\lambda m}{\alpha\lambda} = m\]</span></p>
+<p>ただしこれはモジュロ演算の割り算なのでモジュラ逆数を見つけて掛け算する操作になるので注意</p>
+<p><span class="math display">\[L(C^\lambda) * (L(g^\lambda))^{-1} = m\]</span></p>
+</div>
+<div id="加法準同型性の確認これが言いたいだけ" class="slide section level1">
+<h1>加法準同型性の確認(これが言いたいだけ)</h1>
+<p><span class="math display">\[C_1 = g^{m_1} * r_1^n \pmod{n^2}\]</span> <span class="math display">\[C_2 = g^{m_2} * r_2^n \pmod{n^2}\]</span></p>
+<p><span class="math display">\[C_1 * C_2 = g^{m_1 + m_2} * (r_1 r_2)^n \pmod{n^2}\]</span></p>
+<p>これを復号すると</p>
+<p><span class="math display">\[m_1 + m_2\]</span></p>
+<p>が得られることになる</p>
+</div>
+<div id="これは本当に暗号になっているのか" class="slide section level1">
+<h1>これは本当に暗号になっているのか？</h1>
+<p>暗号化したまま足し算が出来ることは分かったが，そもそも</p>
+<p><span class="math display">\[C = g^{m} * r^{n} \pmod{n^2}\]</span></p>
+<p>これは本当に暗号になっているのか？</p>
+<p>だって掛け算してるだけでは…？</p>
+</div>
+<div id="なります" class="slide section level1">
+<h1>なります</h1>
+<p>モジュロ演算であることが重要です</p>
+<p>掛け算を何回も何回もやっているだけの計算ですが実はその都度 <span class="math inline">\(n^2\)</span> で割った余りを考えているので<br />
+<span class="math inline">\(0\)</span> から <span class="math inline">\(n^2 - 1\)</span> の範囲を何周もします</p>
+<p>するとその計算結果は最早規則が無いように見えます</p>
+</div>
+<div id="復号は無理" class="slide section level1">
+<h1>復号は無理</h1>
+<p>ここでモジュロ演算になると難しくなる計算があると言ったのを思い出して欲しいのですが…</p>
+<p>実は <span class="math inline">\(g^m = c \pmod{n^2}\)</span> の計算，左辺を計算して右辺を求めることは簡単なのですが…</p>
+<p>逆に右辺 <span class="math inline">\(c\)</span> だけを与えられた時に「これは <span class="math inline">\(g\)</span> を何乗したものですか？」というのが簡単には求まらないのです</p>
+<p>これを <strong>離散対数問題</strong> と言います</p>
+<p>しかし <span class="math inline">\(n\)</span> を素因数分解した <span class="math inline">\(p\)</span> <span class="math inline">\(q\)</span> を知っていると先程紹介した復号方法で <span class="math inline">\(m\)</span> を計算することは出来ます</p>
+<p>そしてこれは聞いたことのある人も居ると思いますが大きな2つの素数の積を素因数分解することはこれまた簡単には出来ないのです</p>
+</div>
+<div id="実装の更に細かい話" class="slide section level1">
+<h1>実装の更に細かい話</h1>
+<p>まだ説明をしていないままの箇所をまとめて説明</p>
+<p>以下は全てライブラリで提供されています</p>
+<h2 id="最大公約数の計算方法">最大公約数の計算方法</h2>
+<p>ユークリッドの互除法というアルゴリズムで可能</p>
+<h2 id="最小公倍数の計算方法">最小公倍数の計算方法</h2>
+<p><span class="math inline">\(\operatorname{lcm}(x, y) = (x * y) / \gcd(x, y)\)</span></p>
+<p><span class="math inline">\(\gcd(x, y)\)</span> は最大公約数</p>
+<h2 id="モジュラ逆数の計算方法">モジュラ逆数の計算方法</h2>
+<p>拡張ユークリッドの互除法で可能</p>
+</div>
+<div id="問題点" class="slide section level1">
+<h1>問題点</h1>
+<ul>
+<li>有効票以外の値の投票を判別出来ない(暗号化されているので)</li>
+<li>二重投票は防げない(これは別次元の問題になるので今は考えない)</li>
+<li>秘密鍵保持者と集計者が結託するとダメ(これはどうにかする方法あるんだろうかよく分からない)</li>
+</ul>
+</div>
+<div id="有効票以外の値の投票を弾きたい" class="slide section level1">
+<h1>有効票以外の値の投票を弾きたい</h1>
+<p>この話をする</p>
+</div>
+<div id="ゼロ知識証明" class="slide section level1">
+<h1>ゼロ知識証明</h1>
+<p>相手に情報を与えずに(※相手が得る知識はゼロ)自分が持っている情報が正しいことを証明する方法</p>
+<p>参考: <a href="https://ja.wikipedia.org/wiki/%E3%82%BC%E3%83%AD%E7%9F%A5%E8%AD%98%E8%A8%BC%E6%98%8E">ゼロ知識証明</a></p>
+<p>今回は自分の票を明かすことは無く，しかし自分は有効な票を暗号化してあることを示したい</p>
+</div>
+<div id="section-4" class="slide section level1">
+<h1></h1>
+<p>投票とゼロ知識証明をシミュレート出来るデモは実は既に前から存在する</p>
+<p>参考:</p>
+<ul>
+<li><a href="http://security.hsr.ch/msevote/paillier">Paillier Cryptosystem</a></li>
+</ul>
+</div>
+<div id="ざっくり説明" class="slide section level1">
+<h1>ざっくり説明</h1>
+<p>暗号文だけを使ってその平文が正当でない場合にそれを確率 1/2 で見破れる計算が存在するとする</p>
+<p>言い換えると 1/2 の確率でデタラメでも正解になってしまう問題が存在するとする</p>
+<p>投票先が正当な場合には 100% 正解できる問題である</p>
+<p>その問題を大量に(ほぼ無数に)作り出せる(予め答えを全部計算しておくなんてことは出来ない)とする</p>
+<p>この問題を10連続で正解出来るかどうかを確認する</p>
+<p>正当でない場合にその人が偶然全て正解出来てしまう確率は 1/1024 であるし20連続なら更にとんでもなく低い確率になる</p>
+</div>
+<div id="こんなんアリ" class="slide section level1">
+<h1>こんなんアリ？</h1>
+<p>数学のくせになんか曖昧な気がする…これはアリなのか？</p>
+<p><strong>アリ</strong>です</p>
+<p>よく考えて欲しいのですがそもそも何であっても確率を0にすることは出来ません</p>
+<p>暗号には必ず鍵が存在します</p>
+<p>その鍵を偶然見つけられる確率というのは決して0にはならないのです</p>
+<p>粘土をランダムにこねた場合にそれが何かの錠前の鍵になってしまっている確率は0ではないのです</p>
+<p>でもそんな確率は0だと思って生きてても問題ないのと同じです</p>
+</div>
+<div id="まとめ-1" class="slide section level1">
+<h1>まとめ</h1>
+<ul>
+<li>公開鍵で暗号化し秘密鍵で復号する</li>
+<li>暗号化の方法はオープンである必要がある</li>
+<li>余り付き割り算の世界で考える数学がある</li>
+<li>素因数分解は難しい</li>
+<li>離散対数問題も難しい</li>
+<li>加法準同型暗号を使えば暗号化したまま足し算が出来る
+<ul>
+<li>乗法準同型暗号も完全準同型暗号も現在は存在する</li>
+</ul></li>
+<li>秘密計算はまだまだ新しい分野</li>
+<li>電子投票とインターネット投票は別</li>
+<li>Paillier暗号はやってることは掛け算ばかり</li>
+</ul>
+</div>
+<div id="まとめ-2" class="slide section level1">
+<h1>まとめ</h1>
+<p>Paillier暗号はやってることは掛け算ばかり…だが？</p>
+<ul>
+<li>どうしてそれで大丈夫なのか？を厳密に証明するのは大変です</li>
+<li>今回説明していない部分がまだ多くあります
+<ul>
+<li>巡回群</li>
+<li>カーマイケルの定理</li>
+<li>二項定理</li>
+<li>異なる <span class="math inline">\(m\)</span> で <span class="math inline">\(C = g^m \pmod{n^2}\)</span> はちゃんと異なる値になるか</li>
+<li>なんで <span class="math inline">\(\lambda = \operatorname{lcm}(p-1,q-1)\)</span> で復号出来るの？</li>
+<li>フェルマーの小定理，オイラー関数，カーマイケル関数</li>
+</ul></li>
+</ul>
+</div>
+</body>
+</html>
+<!-- Pandoc version:
+pandoc 2.7.3
+Compiled with pandoc-types 1.17.6.1, texmath 0.11.3, skylighting 0.8.2
+Default user data directory: <DELETED>
+Copyright (C) 2006-2019 John MacFarlane
+Web:  http://pandoc.org
+This is free software; see the source for copying conditions.
+There is no warranty, not even for merchantability or fitness
+for a particular purpose.
+-->
