@@ -788,3 +788,11 @@ Paillier暗号はやってることは掛け算ばかり…だが？
   - 異なる $m$ で $C = g^m \pmod{n^2}$ はちゃんと異なる値になるか
   - なんで $\lambda = \operatorname{lcm}(p-1,q-1)$ で復号出来るの？
   - フェルマーの小定理，オイラー関数，カーマイケル関数
+
+# 終了後追記
+
+デモ展示に使っていたアプリケーションのリポジトリです
+
+[kaosf/20191019-oscev - GitHub](https://github.com/kaosf/20191019-oscev)
+
+Herokuのアカウントを持っていれば Deploy to Heroku ボタンで一発デプロイ出来ます
